@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOPI | متابعة مصاريف ومساهمات الكافيه</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">K</div>
+    <div class="brand-text">
+      <h1>KOPI</h1>
+      <span>متابعة مصاريف ومساهمات الشركاء</span>
+    </div>
+  </div>
+  <div class="status-pill">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">جاري الاتصال...</span>
+  </div>
+</div>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-page="dashboard"> الملخص العام</button>
+  <button class="tab-btn" data-page="contributions"> المساهمات</button>
+  <button class="tab-btn" data-page="expenses"> المصروفات</button>
+  <button class="tab-btn" data-page="custody"> عهدة الشركاء</button>
+</nav>
+
+<div class="container">
+
+  <div id="setupBanner" class="setup-banner hidden">
+    ⚠️ <b>الموقع لسه مش متوصل بالشيت.</b><br>
+    افتح ملف <code>config.js</code> وحط رابط الـ Google Apps Script بتاعك في <code>APPS_SCRIPT_URL</code>.
+    راجع ملف README.md لخطوات الإعداد بالتفصيل.
+  </div>
+
+  <div id="loadingState" class="spinner"></div>
+
+  <!-- ===== Dashboard ===== -->
+  <div class="page" id="page-dashboard">
+    <div class="cards-grid" id="statCards"></div>
+    <div class="section-title">حصص وأرصدة الشركاء</div>
+    <div class="panel">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>اسم الشريك</th>
+              <th>إجمالي ما دفعه</th>
+              <th>نسبة شراكته</th>
+              <th>حصته من المصروفات</th>
+              <th>الفرق (له / عليه)</th>
+            </tr>
+          </thead>
+          <tbody id="partnersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Contributions ===== -->
+  <div class="page" id="page-contributions">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>💰 سجل مساهمات الشركاء</h2>
+        <button class="btn btn-primary" id="addContributionBtn">+ إضافة مساهمة</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>م</th><th>التاريخ</th><th>اسم الشريك</th><th>المبلغ</th><th>طريقة الدفع</th><th>ملاحظات</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="contributionsTableBody"></tbody>
+        </table>
+      </div>
+      <div id="contributionsEmpty" class="empty-state hidden">لسه مفيش مساهمات مسجلة</div>
+    </div>
+  </div>
+
+  <!-- ===== Expenses ===== -->
+  <div class="page" id="page-expenses">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🧾 سجل مصروفات المشروع</h2>
+        <button class="btn btn-primary" id="addExpenseBtn">+ إضافة مصروف</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>م</th><th>التاريخ</th><th>البند</th><th>المبلغ</th><th>اتصرف من فلوس</th><th>ملاحظات</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="expensesTableBody"></tbody>
+        </table>
+      </div>
+      <div id="expensesEmpty" class="empty-state hidden">لسه مفيش مصروفات مسجلة</div>
+    </div>
+  </div>
+
+  <!-- ===== Custody ===== -->
+  <div class="page" id="page-custody">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🤝 متابعة الفلوس المتشالة مع الشركاء</h2>
+        <button class="btn btn-primary" id="addCustodyBtn">+ إضافة عهدة</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>م</th><th>التاريخ</th><th>الشريك الماسك</th><th>المبلغ</th><th>السبب</th><th>الحالة</th><th>ملاحظات</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="custodyTableBody"></tbody>
+        </table>
+      </div>
+      <div id="custodyEmpty" class="empty-state hidden">لسه مفيش عهد مسجلة</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>KOPI © <span id="year"></span> — متصل مباشرة بشيت Google Sheets</footer>
+
+<!-- ===== Modal (shared, filled dynamically) ===== -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">إضافة</h3>
+      <button class="modal-close" id="modalCloseBtn">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modalCancelBtn">إلغاء</button>
+      <button class="btn btn-primary" id="modalSaveBtn">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

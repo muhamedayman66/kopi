@@ -66,12 +66,23 @@ async function loadData(silent) {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     STATE = data;
+    if (!STATE.lists) {
+      STATE.lists = {
+        partners: [],
+        paymentMethods: ["كاش", "تحويل بانكي", "فودافون كاش", "إنستا باي"],
+        expensePaidFrom: ["الخزنة / الصندوق", "عهدة مع شريك"],
+        custodyStatus: ["لا - لسه معاه", "نعم - اتصرفت/اتوردت"]
+      };
+    }
     renderAll();
     setStatus('ok', 'متصل ومحدّث لحظيًا');
   } catch (err) {
     console.error(err);
-    setStatus('err', 'في مشكلة في الاتصال');
-    if (!silent) showToast('حصلت مشكلة في تحميل البيانات، جرب تاني', 'error');
+    setStatus('err', 'مشكلة في الاتصال بالسكريبت');
+    if (!silent) {
+      const errMsg = err.message || 'حصلت مشكلة في تحميل البيانات';
+      showToast('خطأ: ' + errMsg, 'error');
+    }
   } finally {
     document.getElementById('loadingState').classList.add('hidden');
   }
@@ -217,9 +228,9 @@ const FORM_DEFS = {
     title: 'مساهمة',
     fields: [
       { key: 'date', label: 'التاريخ', type: 'date', required: true },
-      { key: 'partner', label: 'اسم الشريك', type: 'select', options: () => STATE.lists.partners, required: true },
+      { key: 'partner', label: 'اسم الشريك', type: 'select', options: () => (STATE.lists && STATE.lists.partners) || [], required: true },
       { key: 'amount', label: 'المبلغ المدفوع', type: 'number', required: true },
-      { key: 'method', label: 'طريقة الدفع', type: 'select', options: () => STATE.lists.paymentMethods, required: true },
+      { key: 'method', label: 'طريقة الدفع', type: 'select', options: () => (STATE.lists && STATE.lists.paymentMethods) || ['كاش', 'تحويل بانكي'], required: true },
       { key: 'notes', label: 'ملاحظات', type: 'text' }
     ]
   },
@@ -229,7 +240,7 @@ const FORM_DEFS = {
       { key: 'date', label: 'التاريخ', type: 'date', required: true },
       { key: 'item', label: 'البند / بيان المصروف', type: 'text', required: true },
       { key: 'amount', label: 'المبلغ', type: 'number', required: true },
-      { key: 'paidFrom', label: 'اتصرف من فلوس', type: 'select', options: () => STATE.lists.expensePaidFrom, required: true },
+      { key: 'paidFrom', label: 'اتصرف من فلوس', type: 'select', options: () => (STATE.lists && STATE.lists.expensePaidFrom) || ['الخزنة / الصندوق'], required: true },
       { key: 'notes', label: 'ملاحظات', type: 'text' }
     ]
   },
@@ -237,10 +248,10 @@ const FORM_DEFS = {
     title: 'عهدة',
     fields: [
       { key: 'date', label: 'التاريخ', type: 'date', required: true },
-      { key: 'partner', label: 'اسم الشريك الماسك للمبلغ', type: 'select', options: () => STATE.lists.partners, required: true },
+      { key: 'partner', label: 'اسم الشريك الماسك للمبلغ', type: 'select', options: () => (STATE.lists && STATE.lists.partners) || [], required: true },
       { key: 'amount', label: 'المبلغ', type: 'number', required: true },
       { key: 'reason', label: 'سبب وجود الفلوس معاه', type: 'text' },
-      { key: 'status', label: 'هل تم توريدها/صرفها؟', type: 'select', options: () => STATE.lists.custodyStatus, required: true },
+      { key: 'status', label: 'هل تم توريدها/صرفها؟', type: 'select', options: () => (STATE.lists && STATE.lists.custodyStatus) || ['لا - لسه معاه', 'نعم - اتصرفت/اتوردت'], required: true },
       { key: 'notes', label: 'ملاحظات', type: 'text' }
     ]
   }

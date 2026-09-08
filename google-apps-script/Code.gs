@@ -1,15 +1,6 @@
 // ==========================================================
 // KOPI API - Google Apps Script Backend
 // ==========================================================
-// طريقة الاستخدام:
-// 1. افتح جوجل شيت الخاص بالمشروع
-// 2. من القائمة: Extensions (الإضافات) -> Apps Script
-// 3. الصق هذا الكود بالكامل وقم بالحفظ (Ctrl+S)
-// 4. اضغط Deploy -> New Deployment -> Select Type: Web App
-// 5. Execute as: Me
-// 6. Who has access: Anyone
-// 7. انسخ الرابط وضع قيمته في ملف config.js في مشروعك
-// ==========================================================
 
 function getSpreadsheet() {
   try {
@@ -17,7 +8,6 @@ function getSpreadsheet() {
     if (ss) return ss;
   } catch (e) {}
 
-  // في حال كان السكريبت غير مرتبط بشيت مباشر، ضعي ID الشيت هنا اختياريًا
   var SPREADSHEET_ID = ""; 
   if (SPREADSHEET_ID) {
     return SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -26,11 +16,9 @@ function getSpreadsheet() {
   throw new Error("لم يتم العثور على جوجل شيت المرتبط. يرجى فتح Apps Script من داخل الشيت نفسه (Extensions -> Apps Script)");
 }
 
-// دالة جلب الشيت بأمان وتنشئته إن لم يكن موجودًا لتفادي أي خطأ Cannot read properties of null
 function getOrCreateSheet(ss, name, headers) {
   var sheets = ss.getSheets();
   
-  // 1. البحث عن تطابق مباشر أو جزيئ
   for (var i = 0; i < sheets.length; i++) {
     var sName = sheets[i].getName().trim();
     if (sName.indexOf(name) !== -1 || name.indexOf(sName) !== -1) {
@@ -38,7 +26,6 @@ function getOrCreateSheet(ss, name, headers) {
     }
   }
 
-  // 2. إذا لم يوجد الشيت، يتم إنشاؤه تلقائيًا بكتابة الهيدر
   var newSheet = ss.insertSheet(name);
   if (headers && headers.length > 0) {
     newSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
@@ -51,7 +38,6 @@ function doGet(e) {
   return handleRequest(function() {
     var ss = getSpreadsheet();
 
-    // التأكد والجلب لجميع الشيتات المطلوب التعامل معها
     var sheetContrib = getOrCreateSheet(ss, "المساهمات", ["م", "التاريخ", "اسم الشريك", "المبلغ", "طريقة الدفع", "ملاحظات"]);
     var sheetExpense = getOrCreateSheet(ss, "المصروفات", ["م", "التاريخ", "البند", "المبلغ", "اتصرف من فلوس", "ملاحظات"]);
     var sheetCustody = getOrCreateSheet(ss, "عهدة", ["م", "التاريخ", "الشريك الماسك", "المبلغ", "السبب", "الحالة", "ملاحظات"]);
@@ -100,7 +86,7 @@ function doGet(e) {
     var partnerList = Object.keys(partnerSet);
     if (partnerList.length === 0) partnerList = ["شريك 1", "شريك 2"];
 
-    // حساب الإحصائيات
+    // حساب الإحصائيات العامة
     var totalContrib = contributions.reduce(function(acc, item) { return acc + item.amount; }, 0);
     var totalExp = expenses.reduce(function(acc, item) { return acc + item.amount; }, 0);
     var custodyHeld = custody.reduce(function(acc, item) { 
@@ -110,11 +96,20 @@ function doGet(e) {
     }, 0);
     var available = totalContrib - totalExp;
 
-    // حساب حصة الشركاء
-    var partnersSummary = partnerList.map(function(pName) {
+    // مجموع ما دفعه الشركاء المحددون فقط
+    var sumPartnerPaid = 0;
+    var partnerPaidMap = {};
+    partnerList.forEach(function(pName) {
       var pContrib = contributions.filter(function(c) { return c.partner === pName; })
                                   .reduce(function(acc, c) { return acc + c.amount; }, 0);
-      var sharePct = totalContrib > 0 ? (pContrib / totalContrib) : (1 / partnerList.length);
+      partnerPaidMap[pName] = pContrib;
+      sumPartnerPaid += pContrib;
+    });
+
+    // حساب حصة الشركاء بناءً على مجموع مدفوعات الشركاء الفعلية
+    var partnersSummary = partnerList.map(function(pName) {
+      var pContrib = partnerPaidMap[pName] || 0;
+      var sharePct = sumPartnerPaid > 0 ? (pContrib / sumPartnerPaid) : (1 / partnerList.length);
       var shareExp = totalExp * sharePct;
       var balance = pContrib - shareExp;
 
@@ -129,10 +124,10 @@ function doGet(e) {
 
     partnersSummary.push({
       name: "الإجمالي",
-      totalPaid: totalContrib,
+      totalPaid: sumPartnerPaid,
       sharePercent: 1,
       shareOfExpenses: totalExp,
-      balance: available
+      balance: sumPartnerPaid - totalExp
     });
 
     return {
@@ -179,7 +174,7 @@ function doPost(e) {
     var sheet = getOrCreateSheet(ss, sheetName);
 
     if (action === "add") {
-      var nextId = sheet.getLastRow(); // الصف بعد الهيدر
+      var nextId = sheet.getLastRow();
       var rowData = [];
       if (sheetKey === "contributions") {
         rowData = [nextId, data.date, data.partner, data.amount, data.method, data.notes || ""];
@@ -204,7 +199,6 @@ function doPost(e) {
 
     } else if (action === "delete") {
       if (!row || row < 2) throw new Error("رقم الصف غير صحيح للحذف");
-      // بدلاً من حذف الصف وتخريب المعادلات، نضع قيم فارغة للصف
       var numCols = sheet.getLastColumn() || 6;
       var emptyValues = [];
       for (var i = 0; i < numCols; i++) emptyValues.push("");
@@ -227,7 +221,6 @@ function readSheetData(sheet, mapFn) {
   var result = [];
   for (var i = 0; i < values.length; i++) {
     var r = values[i];
-    // تجاهل الصفوف الفارغة بالكامل
     var isEmpty = r.every(function(cell) { return cell === "" || cell === null || cell === undefined; });
     if (!isEmpty) {
       result.push(mapFn(r, i));

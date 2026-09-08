@@ -59,7 +59,7 @@ function isConfigured() {
     !APPS_SCRIPT_URL.includes('PASTE_YOUR');
 }
 
-// ---------- Tab Switchers (Desktop + Mobile Sync) ----------
+// ---------- Tab Switchers ----------
 function switchTab(pageId) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === pageId));
   document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === pageId));
@@ -130,197 +130,205 @@ function renderAll() {
   renderCustody();
 }
 
-// 1. Dashboard Render & Smart Calculations
+// Dynamic Accounting & Partner Share Recalculation
+function calculatePartnersSummary() {
+  const contribs = STATE.contributions || [];
+  const exps = STATE.expenses || [];
+
+  // Extract unique list of partners from lists or contributions
+  let partnerNames = (STATE.lists && STATE.lists.partners) || [];
+  contribs.forEach(c => {
+    if (c.partner && !partnerNames.includes(c.partner)) partnerNames.push(c.partner);
+  });
+
+  // Calculate total paid by each partner
+  const partnerPaidMap = {};
+  partnerNames.forEach(name => partnerPaidMap[name] = 0);
+
+  contribs.forEach(c => {
+    if (c.partner && c.amount) {
+      partnerPaidMap[c.partner] = (partnerPaidMap[c.partner] || 0) + Number(c.amount);
+    }
+  });
+
+  // Filter out partners with 0 paid if they have no entries and not in list
+  const activePartners = Object.keys(partnerPaidMap);
+  
+  // Total paid by ALL partners
+  const sumPartnersPaid = activePartners.reduce((acc, name) => acc + partnerPaidMap[name], 0);
+
+  // Total Expenses
+  const totalExpenses = exps.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
+
+  // Total Contributions Overall
+  const totalContribs = contribs.reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
+
+  // Calculate individual partner share % dynamically based on paid amount
+  const partnersSummary = activePartners.map(name => {
+    const paid = partnerPaidMap[name] || 0;
+
+    // Share Percentage:
+    // If sum of partners paid > 0, share % = paid / sumPartnersPaid
+    // Else equal share = 1 / activePartners.length
+    let sharePct = 0;
+    if (sumPartnersPaid > 0) {
+      sharePct = paid / sumPartnersPaid;
+    } else if (activePartners.length > 0) {
+      sharePct = 1 / activePartners.length;
+    }
+
+    const shareOfExp = totalExpenses * sharePct;
+    const balance = paid - shareOfExp;
+
+    return {
+      name,
+      totalPaid: paid,
+      sharePercent: sharePct,
+      shareOfExpenses: shareOfExp,
+      balance
+    };
+  });
+
+  return {
+    partnersSummary,
+    totals: {
+      totalContributions: totalContribs,
+      totalExpenses,
+      sumPartnersPaid,
+      availableBalance: totalContribs - totalExpenses
+    }
+  };
+}
+
+// 1. Dashboard Render
 function renderDashboard() {
-  const s = STATE.summary;
+  const computed = calculatePartnersSummary();
+  const s = STATE.summary || {};
+  const t = computed.totals;
+  const custodyList = STATE.custody || [];
+
+  const custodyHeld = custodyList.reduce((acc, item) => {
+    const st = (item.status || '').toLowerCase();
+    const isHeld = st.includes('لا') || st.includes('معاه');
+    return isHeld ? acc + Number(item.amount || 0) : acc;
+  }, 0);
+
   const cardsEl = document.getElementById('statCards');
-  if (!s) { cardsEl.innerHTML = ''; return; }
-  const t = s.totals || {};
+  if (cardsEl) {
+    cardsEl.innerHTML = `
+      <div class="metric-card emerald">
+        <div class="metric-header">
+          <span class="metric-title">إجمالي المساهمات المدفوعة</span>
+          <span class="metric-icon">💰</span>
+        </div>
+        <div class="metric-value">${fmtMoney(t.totalContributions)}</div>
+        <div class="metric-subtitle">رأس المال المجمع من الشركاء</div>
+      </div>
 
-  cardsEl.innerHTML = `
-    <div class="metric-card emerald">
-      <div class="metric-header">
-        <span class="metric-title">إجمالي المساهمات المدفوعة</span>
-        <span class="metric-icon">💰</span>
+      <div class="metric-card rose">
+        <div class="metric-header">
+          <span class="metric-title">إجمالي المصروفات</span>
+          <span class="metric-icon">🧾</span>
+        </div>
+        <div class="metric-value">${fmtMoney(t.totalExpenses)}</div>
+        <div class="metric-subtitle">مشاريع وتجهيزات وتشغيل</div>
       </div>
-      <div class="metric-value">${fmtMoney(t.totalContributions)}</div>
-      <div class="metric-subtitle">رأس المال الضخ من الشركاء</div>
-    </div>
 
-    <div class="metric-card rose">
-      <div class="metric-header">
-        <span class="metric-title">إجمالي المصروفات</span>
-        <span class="metric-icon">🧾</span>
+      <div class="metric-card amber">
+        <div class="metric-header">
+          <span class="metric-title">عهد معلقة مع الشركاء</span>
+          <span class="metric-icon">🤝</span>
+        </div>
+        <div class="metric-value">${fmtMoney(custodyHeld)}</div>
+        <div class="metric-subtitle">لم يتم تسويتها بعد</div>
       </div>
-      <div class="metric-value">${fmtMoney(t.totalExpenses)}</div>
-      <div class="metric-subtitle">مشاريع وتجهيزات وتشغيل</div>
-    </div>
 
-    <div class="metric-card amber">
-      <div class="metric-header">
-        <span class="metric-title">عهد معلقة مع الشركاء</span>
-        <span class="metric-icon">🤝</span>
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">الرصيد الصافي المتاح بالخزينة</span>
+          <span class="metric-icon">🏦</span>
+        </div>
+        <div class="metric-value" style="color: ${t.availableBalance < 0 ? 'var(--brand-rose)' : 'var(--brand-blue)'}">
+          ${fmtMoney(t.availableBalance)}
+        </div>
+        <div class="metric-subtitle">${t.availableBalance < 0 ? 'عجز في الخزينة' : 'فائض جاهز للاستخدام'}</div>
       </div>
-      <div class="metric-value">${fmtMoney(t.custodyStillHeld)}</div>
-      <div class="metric-subtitle">لم يتم تسويتها بعد</div>
-    </div>
-
-    <div class="metric-card">
-      <div class="metric-header">
-        <span class="metric-title">الرصيد الصافي المتاح بالخزينة</span>
-        <span class="metric-icon">🏦</span>
-      </div>
-      <div class="metric-value" style="color: ${t.availableBalance < 0 ? 'var(--brand-rose)' : 'var(--brand-blue)'}">
-        ${fmtMoney(t.availableBalance)}
-      </div>
-      <div class="metric-subtitle">${t.availableBalance < 0 ? 'عجز في الخزينة' : 'فائض جاهز للاستخدام'}</div>
-    </div>
-  `;
+    `;
+  }
 
   // Partners Summary Table
   const body = document.getElementById('partnersTableBody');
-  const partners = (s.partners || []).filter(p => p.name && p.name !== 'الإجمالي');
-  const totalRow = (s.partners || []).find(p => p.name === 'الإجمالي');
+  const mobileList = document.getElementById('partnersCardsMobile');
+  const partners = computed.partnersSummary;
 
-  let rowsHtml = partners.map(p => `
-    <tr>
-      <td style="font-weight:800;">${p.name}</td>
-      <td class="amount-display">${fmtMoney(p.totalPaid)}</td>
-      <td><span class="badge-pill blue">${Math.round((p.sharePercent || 0) * 100)}%</span></td>
-      <td>${fmtMoney(p.shareOfExpenses)}</td>
-      <td>
-        <span class="badge-pill ${p.balance < 0 ? 'rose' : 'green'}">
-          ${p.balance < 0 ? 'عليه للمشروع' : 'له لدى المشروع'} ${fmtMoney(Math.abs(p.balance))}
-        </span>
-      </td>
-    </tr>
-  `).join('');
+  let rowsHtml = partners.map(p => {
+    const pctVal = (p.sharePercent || 0) * 100;
+    const pctFormatted = Number.isInteger(pctVal) ? pctVal + '%' : pctVal.toFixed(1) + '%';
+    const isNeg = p.balance < 0;
+    const balLabel = isNeg ? 'عليه للمشروع' : 'له لدى المشروع';
 
-  if (totalRow) {
-    rowsHtml += `
-      <tr style="font-weight:900; background:#f1f5f9;">
-        <td>الإجمالي</td>
-        <td class="amount-display">${fmtMoney(totalRow.totalPaid)}</td>
-        <td><span class="badge-pill blue">100%</span></td>
-        <td>${fmtMoney(totalRow.shareOfExpenses)}</td>
+    return `
+      <tr>
+        <td style="font-weight:800;">${p.name}</td>
+        <td class="amount-display">${fmtMoney(p.totalPaid)}</td>
+        <td><span class="badge-pill blue">${pctFormatted}</span></td>
+        <td>${fmtMoney(p.shareOfExpenses)}</td>
         <td>
-          <span class="badge-pill ${totalRow.balance < 0 ? 'rose' : 'green'}">
-            ${fmtMoney(totalRow.balance)}
+          <span class="badge-pill ${isNeg ? 'rose' : 'green'}">
+            ${balLabel} ${fmtMoney(Math.abs(p.balance))}
           </span>
         </td>
-      </tr>`;
+      </tr>
+    `;
+  }).join('');
+
+  // Total Summary Row
+  const totalPaidSum = t.sumPartnersPaid;
+  const totalExpSum = t.totalExpenses;
+  const totalBal = totalPaidSum - totalExpSum;
+
+  rowsHtml += `
+    <tr style="font-weight:900; background:#f1f5f9;">
+      <td>الإجمالي</td>
+      <td class="amount-display">${fmtMoney(totalPaidSum)}</td>
+      <td><span class="badge-pill blue">100%</span></td>
+      <td>${fmtMoney(totalExpSum)}</td>
+      <td>
+        <span class="badge-pill ${totalBal < 0 ? 'rose' : 'green'}">
+          ${fmtMoney(totalBal)}
+        </span>
+      </td>
+    </tr>`;
+
+  if (body) body.innerHTML = rowsHtml;
+
+  // Mobile Cards List for Partners Summary
+  if (mobileList) {
+    mobileList.innerHTML = partners.map(p => {
+      const pctVal = (p.sharePercent || 0) * 100;
+      const pctFormatted = Number.isInteger(pctVal) ? pctVal + '%' : pctVal.toFixed(1) + '%';
+      const isNeg = p.balance < 0;
+      const balLabel = isNeg ? 'عليه للمشروع' : 'له لدى المشروع';
+
+      return `
+        <div class="mobile-data-card">
+          <div class="mobile-card-row">
+            <span class="mobile-card-title">${p.name}</span>
+            <span class="badge-pill blue">نسبة الشراكة: ${pctFormatted}</span>
+          </div>
+          <div class="mobile-card-row mobile-card-meta">
+            <span>ما تم دفعه: <b>${fmtMoney(p.totalPaid)}</b></span>
+            <span>الحصة من المصروفات: <b>${fmtMoney(p.shareOfExpenses)}</b></span>
+          </div>
+          <div class="mobile-card-row" style="margin-top:4px;">
+            <span class="badge-pill ${isNeg ? 'rose' : 'green'}" style="width:100%; text-align:center; justify-content:center;">
+              ${balLabel}: ${fmtMoney(Math.abs(p.balance))}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
-  body.innerHTML = rowsHtml || '<tr><td colspan="5" class="empty-state">لا يوجد بيانات مسجلة</td></tr>';
-
-  // Smart Settlement Assistant Calculation
-  renderSettlementAssistant(partners);
-
-  // Expense Category Analytics
-  renderCategoryAnalytics();
-}
-
-// Smart Settlement Algorithm
-function renderSettlementAssistant(partners) {
-  const container = document.getElementById('settlementBox');
-  if (!partners || partners.length === 0) {
-    container.innerHTML = '<div class="settlement-balanced">لا يوجد شركاء كافية لحساب التسوية</div>';
-    return;
-  }
-
-  // Clone balances
-  let creditors = []; // له فلوس (> 0)
-  let debtors = [];   // عليه فلوس (< 0)
-
-  partners.forEach(p => {
-    const bal = Math.round(p.balance || 0);
-    if (bal > 10) creditors.push({ name: p.name, amount: bal });
-    else if (bal < -10) debtors.push({ name: p.name, amount: Math.abs(bal) });
-  });
-
-  if (creditors.length === 0 && debtors.length === 0) {
-    container.innerHTML = '<div class="settlement-balanced">🎉 جميع الحسابات متوازنة تماماً بين الشركاء! لا توجد مبالغ مستحقة.</div>';
-    return;
-  }
-
-  let settlements = [];
-  let cIdx = 0;
-  let dIdx = 0;
-
-  while (cIdx < creditors.length && dIdx < debtors.length) {
-    let creditor = creditors[cIdx];
-    let debtor = debtors[dIdx];
-
-    let payAmount = Math.min(creditor.amount, debtor.amount);
-
-    settlements.push({
-      from: debtor.name,
-      to: creditor.name,
-      amount: payAmount
-    });
-
-    creditor.amount -= payAmount;
-    debtor.amount -= payAmount;
-
-    if (creditor.amount <= 10) cIdx++;
-    if (debtor.amount <= 10) dIdx++;
-  }
-
-  container.innerHTML = settlements.map(s => `
-    <div class="settlement-card">
-      <div class="settlement-details">
-        <span style="color:var(--brand-rose);">${s.from}</span>
-        <span class="settlement-arrow">⬅️ يدفع إلى</span>
-        <span style="color:var(--brand-emerald);">${s.to}</span>
-      </div>
-      <div class="settlement-amount">${fmtMoney(s.amount)}</div>
-    </div>
-  `).join('');
-}
-
-// Expense Category Analytics Breakdown
-function renderCategoryAnalytics() {
-  const container = document.getElementById('expenseCategoryList');
-  const expenses = STATE.expenses || [];
-
-  if (expenses.length === 0) {
-    container.innerHTML = '<div class="empty-state">لا يوجد مصروفات مسجلة بعد</div>';
-    return;
-  }
-
-  const categoryTotals = {};
-  let grandTotal = 0;
-
-  expenses.forEach(e => {
-    const item = (e.item || 'عام').trim();
-    // Guess category from keywords
-    let cat = 'مصاريف عامة';
-    if (/إيجار|مرافق|كهرباء|مياه|غاز|نت/i.test(item)) cat = 'إيجار ومرافق';
-    else if (/تجهيز|ديكور|معدات|أثاث|شاشة|ماكينة/i.test(item)) cat = 'تجهيزات ومعدات';
-    else if (/بضاعة|قهوة|لبن|سكر|مستلزمات|خامات/i.test(item)) cat = 'بضائع ومواد خام';
-    else if (/راتب|مرتب|عامل|عمالة|يومية/i.test(item)) cat = 'رواتب وعمالة';
-    else if (/صيانة|تصليح|سباكة|كهربائي/i.test(item)) cat = 'صيانة وتصليح';
-
-    categoryTotals[cat] = (categoryTotals[cat] || 0) + e.amount;
-    grandTotal += e.amount;
-  });
-
-  const categories = Object.keys(categoryTotals).map(cat => ({
-    name: cat,
-    amount: categoryTotals[cat],
-    percent: grandTotal > 0 ? Math.round((categoryTotals[cat] / grandTotal) * 100) : 0
-  })).sort((a, b) => b.amount - a.amount);
-
-  container.innerHTML = categories.map(c => `
-    <div class="category-item">
-      <div class="category-info">
-        <span>${c.name}</span>
-        <span>${fmtMoney(c.amount)} (${c.percent}%)</span>
-      </div>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" style="width: ${c.percent}%;"></div>
-      </div>
-    </div>
-  `).join('');
 }
 
 // 2. Contributions Render (Table + Mobile Cards)
@@ -341,44 +349,48 @@ function renderContributions() {
     return matchQuery && matchPartner;
   });
 
-  empty.classList.toggle('hidden', rows.length > 0);
+  if (empty) empty.classList.toggle('hidden', rows.length > 0);
 
   // Desktop Table
-  body.innerHTML = rows.map(r => `
-    <tr>
-      <td>#${r.id ?? ''}</td>
-      <td>${r.date || ''}</td>
-      <td style="font-weight:800;">${r.partner || ''}</td>
-      <td class="amount-display pos">${fmtMoney(r.amount)}</td>
-      <td><span class="badge-pill blue">${r.method || 'كاش'}</span></td>
-      <td>${r.notes || '—'}</td>
-      <td>
-        <div class="action-row">
+  if (body) {
+    body.innerHTML = rows.map(r => `
+      <tr>
+        <td>#${r.id ?? ''}</td>
+        <td>${r.date || ''}</td>
+        <td style="font-weight:800;">${r.partner || ''}</td>
+        <td class="amount-display pos">${fmtMoney(r.amount)}</td>
+        <td><span class="badge-pill blue">${r.method || 'كاش'}</span></td>
+        <td>${r.notes || '—'}</td>
+        <td>
+          <div class="action-row">
+            <button class="btn btn-outline btn-sm" onclick="openEdit('contributions', ${r._row})">تعديل</button>
+            <button class="btn btn-danger-ghost btn-sm" onclick="deleteRow('contributions', ${r._row})">حذف</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Mobile Cards List
+  if (mobileList) {
+    mobileList.innerHTML = rows.map(r => `
+      <div class="mobile-data-card">
+        <div class="mobile-card-row">
+          <span class="mobile-card-title">${r.partner || 'شريك'}</span>
+          <span class="amount-display pos">${fmtMoney(r.amount)}</span>
+        </div>
+        <div class="mobile-card-row mobile-card-meta">
+          <span>📅 ${r.date || ''}</span>
+          <span class="badge-pill blue">${r.method || 'كاش'}</span>
+        </div>
+        ${r.notes ? `<div class="mobile-card-meta">📝 ${r.notes}</div>` : ''}
+        <div class="mobile-card-actions">
           <button class="btn btn-outline btn-sm" onclick="openEdit('contributions', ${r._row})">تعديل</button>
           <button class="btn btn-danger-ghost btn-sm" onclick="deleteRow('contributions', ${r._row})">حذف</button>
         </div>
-      </td>
-    </tr>
-  `).join('');
-
-  // Mobile Cards List
-  mobileList.innerHTML = rows.map(r => `
-    <div class="mobile-data-card">
-      <div class="mobile-card-row">
-        <span class="mobile-card-title">${r.partner || 'شريك'}</span>
-        <span class="amount-display pos">${fmtMoney(r.amount)}</span>
       </div>
-      <div class="mobile-card-row mobile-card-meta">
-        <span>📅 ${r.date || ''}</span>
-        <span class="badge-pill blue">${r.method || 'كاش'}</span>
-      </div>
-      ${r.notes ? `<div class="mobile-card-meta">📝 ${r.notes}</div>` : ''}
-      <div class="mobile-card-actions">
-        <button class="btn btn-outline btn-sm" onclick="openEdit('contributions', ${r._row})">تعديل</button>
-        <button class="btn btn-danger-ghost btn-sm" onclick="deleteRow('contributions', ${r._row})">حذف</button>
-      </div>
-    </div>
-  `).join('');
+    `).join('');
+  }
 
   renderPartnerFilterPills();
 }
@@ -409,50 +421,51 @@ function renderExpenses() {
 
   let rows = STATE.expenses || [];
 
-  // Filtering
   const q = FILTER_STATE.expenses.query.toLowerCase();
   rows = rows.filter(r => {
     return !q || (r.item && r.item.toLowerCase().includes(q)) || (r.notes && r.notes.toLowerCase().includes(q)) || (r.paidFrom && r.paidFrom.toLowerCase().includes(q));
   });
 
-  empty.classList.toggle('hidden', rows.length > 0);
+  if (empty) empty.classList.toggle('hidden', rows.length > 0);
 
-  // Desktop Table
-  body.innerHTML = rows.map(r => `
-    <tr>
-      <td>#${r.id ?? ''}</td>
-      <td>${r.date || ''}</td>
-      <td style="font-weight:800;">${r.item || ''}</td>
-      <td class="amount-display neg">${fmtMoney(r.amount)}</td>
-      <td><span class="badge-pill blue">${r.paidFrom || 'الخزنة'}</span></td>
-      <td>${r.notes || '—'}</td>
-      <td>
-        <div class="action-row">
+  if (body) {
+    body.innerHTML = rows.map(r => `
+      <tr>
+        <td>#${r.id ?? ''}</td>
+        <td>${r.date || ''}</td>
+        <td style="font-weight:800;">${r.item || ''}</td>
+        <td class="amount-display neg">${fmtMoney(r.amount)}</td>
+        <td><span class="badge-pill blue">${r.paidFrom || 'الخزنة'}</span></td>
+        <td>${r.notes || '—'}</td>
+        <td>
+          <div class="action-row">
+            <button class="btn btn-outline btn-sm" onclick="openEdit('expenses', ${r._row})">تعديل</button>
+            <button class="btn btn-danger-ghost btn-sm" onclick="deleteRow('expenses', ${r._row})">حذف</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  if (mobileList) {
+    mobileList.innerHTML = rows.map(r => `
+      <div class="mobile-data-card">
+        <div class="mobile-card-row">
+          <span class="mobile-card-title">${r.item || 'مصروف'}</span>
+          <span class="amount-display neg">${fmtMoney(r.amount)}</span>
+        </div>
+        <div class="mobile-card-row mobile-card-meta">
+          <span>📅 ${r.date || ''}</span>
+          <span class="badge-pill blue">من: ${r.paidFrom || 'الخزنة'}</span>
+        </div>
+        ${r.notes ? `<div class="mobile-card-meta">📝 ${r.notes}</div>` : ''}
+        <div class="mobile-card-actions">
           <button class="btn btn-outline btn-sm" onclick="openEdit('expenses', ${r._row})">تعديل</button>
           <button class="btn btn-danger-ghost btn-sm" onclick="deleteRow('expenses', ${r._row})">حذف</button>
         </div>
-      </td>
-    </tr>
-  `).join('');
-
-  // Mobile Cards List
-  mobileList.innerHTML = rows.map(r => `
-    <div class="mobile-data-card">
-      <div class="mobile-card-row">
-        <span class="mobile-card-title">${r.item || 'مصروف'}</span>
-        <span class="amount-display neg">${fmtMoney(r.amount)}</span>
       </div>
-      <div class="mobile-card-row mobile-card-meta">
-        <span>📅 ${r.date || ''}</span>
-        <span class="badge-pill blue">من: ${r.paidFrom || 'الخزنة'}</span>
-      </div>
-      ${r.notes ? `<div class="mobile-card-meta">📝 ${r.notes}</div>` : ''}
-      <div class="mobile-card-actions">
-        <button class="btn btn-outline btn-sm" onclick="openEdit('expenses', ${r._row})">تعديل</button>
-        <button class="btn btn-danger-ghost btn-sm" onclick="deleteRow('expenses', ${r._row})">حذف</button>
-      </div>
-    </div>
-  `).join('');
+    `).join('');
+  }
 }
 
 // 4. Custody Render (Table + Mobile Cards)
@@ -463,57 +476,60 @@ function renderCustody() {
 
   let rows = STATE.custody || [];
 
-  // Filtering
   const q = FILTER_STATE.custody.query.toLowerCase();
   rows = rows.filter(r => {
     return !q || (r.partner && r.partner.toLowerCase().includes(q)) || (r.reason && r.reason.toLowerCase().includes(q));
   });
 
-  empty.classList.toggle('hidden', rows.length > 0);
+  if (empty) empty.classList.toggle('hidden', rows.length > 0);
 
-  body.innerHTML = rows.map(r => {
-    const isHeld = (r.status || '').includes('لا') || (r.status || '').includes('معاه');
-    const badgeClass = isHeld ? 'amber' : 'green';
+  if (body) {
+    body.innerHTML = rows.map(r => {
+      const isHeld = (r.status || '').includes('لا') || (r.status || '').includes('معاه');
+      const badgeClass = isHeld ? 'amber' : 'green';
 
-    return `
-    <tr>
-      <td>#${r.id ?? ''}</td>
-      <td>${r.date || ''}</td>
-      <td style="font-weight:800;">${r.partner || ''}</td>
-      <td class="amount-display">${fmtMoney(r.amount)}</td>
-      <td>${r.reason || '—'}</td>
-      <td><span class="badge-pill ${badgeClass}">${r.status || ''}</span></td>
-      <td>${r.notes || '—'}</td>
-      <td>
-        <div class="action-row">
+      return `
+      <tr>
+        <td>#${r.id ?? ''}</td>
+        <td>${r.date || ''}</td>
+        <td style="font-weight:800;">${r.partner || ''}</td>
+        <td class="amount-display">${fmtMoney(r.amount)}</td>
+        <td>${r.reason || '—'}</td>
+        <td><span class="badge-pill ${badgeClass}">${r.status || ''}</span></td>
+        <td>${r.notes || '—'}</td>
+        <td>
+          <div class="action-row">
+            <button class="btn btn-outline btn-sm" onclick="openEdit('custody', ${r._row})">تعديل</button>
+            <button class="btn btn-danger-ghost btn-sm" onclick="deleteRow('custody', ${r._row})">حذف</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  if (mobileList) {
+    mobileList.innerHTML = rows.map(r => {
+      const isHeld = (r.status || '').includes('لا') || (r.status || '').includes('معاه');
+      const badgeClass = isHeld ? 'amber' : 'green';
+
+      return `
+      <div class="mobile-data-card">
+        <div class="mobile-card-row">
+          <span class="mobile-card-title">${r.partner || 'شريك'}</span>
+          <span class="amount-display">${fmtMoney(r.amount)}</span>
+        </div>
+        <div class="mobile-card-row mobile-card-meta">
+          <span>📅 ${r.date || ''}</span>
+          <span class="badge-pill ${badgeClass}">${r.status || ''}</span>
+        </div>
+        ${r.reason ? `<div class="mobile-card-meta">📌 ${r.reason}</div>` : ''}
+        <div class="mobile-card-actions">
           <button class="btn btn-outline btn-sm" onclick="openEdit('custody', ${r._row})">تعديل</button>
           <button class="btn btn-danger-ghost btn-sm" onclick="deleteRow('custody', ${r._row})">حذف</button>
         </div>
-      </td>
-    </tr>`;
-  }).join('');
-
-  mobileList.innerHTML = rows.map(r => {
-    const isHeld = (r.status || '').includes('لا') || (r.status || '').includes('معاه');
-    const badgeClass = isHeld ? 'amber' : 'green';
-
-    return `
-    <div class="mobile-data-card">
-      <div class="mobile-card-row">
-        <span class="mobile-card-title">${r.partner || 'شريك'}</span>
-        <span class="amount-display">${fmtMoney(r.amount)}</span>
-      </div>
-      <div class="mobile-card-row mobile-card-meta">
-        <span>📅 ${r.date || ''}</span>
-        <span class="badge-pill ${badgeClass}">${r.status || ''}</span>
-      </div>
-      ${r.reason ? `<div class="mobile-card-meta">📌 ${r.reason}</div>` : ''}
-      <div class="mobile-card-actions">
-        <button class="btn btn-outline btn-sm" onclick="openEdit('custody', ${r._row})">تعديل</button>
-        <button class="btn btn-danger-ghost btn-sm" onclick="deleteRow('custody', ${r._row})">حذف</button>
-      </div>
-    </div>`;
-  }).join('');
+      </div>`;
+    }).join('');
+  }
 }
 
 // Search Filter Handler

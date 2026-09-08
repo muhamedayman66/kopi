@@ -76,7 +76,7 @@
       <span>جاري معالجة الحسابات...</span>
     </div>
 
-    <!-- PAGE 1: DASHBOARD & SMART ANALYTICS -->
+    <!-- PAGE 1: DASHBOARD -->
     <section class="page-view active" id="page-dashboard">
       
       <!-- Top Metrics Cards -->
@@ -95,65 +95,34 @@
         </button>
       </div>
 
-      <!-- Smart Financial Insights Grid -->
-      <div class="dashboard-grid">
-        
-        <!-- Partner Share Table -->
-        <div class="glass-card full-width">
-          <div class="card-header">
-            <div class="header-title">
-              <span class="header-icon blue">📊</span>
-              <div>
-                <h2>موقف وأرصدة الشركاء</h2>
-                <p>متابعة ميزان المدفوعات والحصص</p>
-              </div>
+      <!-- Partner Share Table Card -->
+      <div class="glass-card full-width">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="header-icon blue">📊</span>
+            <div>
+              <h2>موقف وأرصدة الشركاء</h2>
+              <p>متابعة ميزان المدفوعات والحصص النسبية للمشروع</p>
             </div>
           </div>
-          <div class="responsive-table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>اسم الشريك</th>
-                  <th>ما تم دفعه</th>
-                  <th>نسبة الشراكة</th>
-                  <th>الحصة من المصروفات</th>
-                  <th>صافي المركز المالي</th>
-                </tr>
-              </thead>
-              <tbody id="partnersTableBody"></tbody>
-            </table>
-          </div>
         </div>
-
-        <!-- Smart Settlement Assistant -->
-        <div class="glass-card">
-          <div class="card-header">
-            <div class="header-title">
-              <span class="header-icon green">💡</span>
-              <div>
-                <h2>أداة تسوية الشركاء الفورية</h2>
-                <p>كيف تتم التسوية بين الشركاء بأقل عدد تحويلات</p>
-              </div>
-            </div>
-          </div>
-          <div id="settlementBox" class="settlement-container"></div>
+        <div class="responsive-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>اسم الشريك</th>
+                <th>ما تم دفعه</th>
+                <th>نسبة الشراكة</th>
+                <th>الحصة من المصروفات</th>
+                <th>صافي المركز المالي</th>
+              </tr>
+            </thead>
+            <tbody id="partnersTableBody"></tbody>
+          </table>
         </div>
-
-        <!-- Expenses Breakdown Analytics -->
-        <div class="glass-card">
-          <div class="card-header">
-            <div class="header-title">
-              <span class="header-icon purple">🏷️</span>
-              <div>
-                <h2>تحليل بوب ومصادر الصرف</h2>
-                <p>توزيع المصروفات حسب الفئات والجداول</p>
-              </div>
-            </div>
-          </div>
-          <div id="expenseCategoryList" class="category-analytics"></div>
-        </div>
-
+        <div id="partnersCardsMobile" class="mobile-cards-list"></div>
       </div>
+
     </section>
 
     <!-- PAGE 2: CONTRIBUTIONS -->
@@ -256,7 +225,7 @@
             <span class="header-icon amber">🤝</span>
             <div>
               <h2>متابعة العهد المترتبة لدى الشركاء</h2>
-              <p>الفولس المسلمة لشركاء كعهدة لشراء مستلزمات</p>
+              <p>الفلوس المسلمة لشركاء كعهدة لشراء مستلزمات</p>
             </div>
           </div>
           <button class="btn btn-primary" onclick="openAdd('custody')">
@@ -317,7 +286,7 @@
   </button>
 </nav>
 
-<!-- Modal Container (Dynamically rendered with smart presets) -->
+<!-- Modal Container -->
 <div class="modal-overlay hidden" id="modalOverlay">
   <div class="modal-card">
     <div class="modal-header">

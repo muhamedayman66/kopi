@@ -236,11 +236,11 @@ function renderDashboard() {
 
       <div class="metric-card amber">
         <div class="metric-header">
-          <span class="metric-title">عهد معلقة مع الشركاء</span>
+          <span class="metric-title">عهد وخزنة المشروع مع الشركاء</span>
           <span class="metric-icon">🤝</span>
         </div>
         <div class="metric-value">${fmtMoney(custodyHeld)}</div>
-        <div class="metric-subtitle">لم يتم تسويتها بعد</div>
+        <div class="metric-subtitle">خزنة وسيولة متوفرة مع الشركاء</div>
       </div>
 
       <div class="metric-card">
@@ -264,8 +264,6 @@ function renderDashboard() {
   let rowsHtml = partners.map(p => {
     const pctVal = (p.sharePercent || 0) * 100;
     const pctFormatted = Number.isInteger(pctVal) ? pctVal + '%' : pctVal.toFixed(1) + '%';
-    const isNeg = p.balance < 0;
-    const balLabel = isNeg ? 'عليه للمشروع' : 'له لدى المشروع';
 
     return `
       <tr>
@@ -273,11 +271,6 @@ function renderDashboard() {
         <td class="amount-display">${fmtMoney(p.totalPaid)}</td>
         <td><span class="badge-pill blue">${pctFormatted}</span></td>
         <td>${fmtMoney(p.shareOfExpenses)}</td>
-        <td>
-          <span class="badge-pill ${isNeg ? 'rose' : 'green'}">
-            ${balLabel} ${fmtMoney(Math.abs(p.balance))}
-          </span>
-        </td>
       </tr>
     `;
   }).join('');
@@ -285,7 +278,6 @@ function renderDashboard() {
   // Total Summary Row
   const totalPaidSum = t.sumPartnersPaid;
   const totalExpSum = t.totalExpenses;
-  const totalBal = totalPaidSum - totalExpSum;
 
   rowsHtml += `
     <tr style="font-weight:900; background:#f1f5f9;">
@@ -293,11 +285,6 @@ function renderDashboard() {
       <td class="amount-display">${fmtMoney(totalPaidSum)}</td>
       <td><span class="badge-pill blue">100%</span></td>
       <td>${fmtMoney(totalExpSum)}</td>
-      <td>
-        <span class="badge-pill ${totalBal < 0 ? 'rose' : 'green'}">
-          ${fmtMoney(totalBal)}
-        </span>
-      </td>
     </tr>`;
 
   if (body) body.innerHTML = rowsHtml;
@@ -307,8 +294,6 @@ function renderDashboard() {
     mobileList.innerHTML = partners.map(p => {
       const pctVal = (p.sharePercent || 0) * 100;
       const pctFormatted = Number.isInteger(pctVal) ? pctVal + '%' : pctVal.toFixed(1) + '%';
-      const isNeg = p.balance < 0;
-      const balLabel = isNeg ? 'عليه للمشروع' : 'له لدى المشروع';
 
       return `
         <div class="mobile-data-card">
@@ -319,11 +304,6 @@ function renderDashboard() {
           <div class="mobile-card-row mobile-card-meta">
             <span>ما تم دفعه: <b>${fmtMoney(p.totalPaid)}</b></span>
             <span>الحصة من المصروفات: <b>${fmtMoney(p.shareOfExpenses)}</b></span>
-          </div>
-          <div class="mobile-card-row" style="margin-top:4px;">
-            <span class="badge-pill ${isNeg ? 'rose' : 'green'}" style="width:100%; text-align:center; justify-content:center;">
-              ${balLabel}: ${fmtMoney(Math.abs(p.balance))}
-            </span>
           </div>
         </div>
       `;

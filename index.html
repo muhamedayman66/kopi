@@ -2,148 +2,346 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOPI | متابعة مصاريف ومساهمات الكافيه</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KOPI | الإدارة المالية الذكية للكافيه والشركاء</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="topbar">
-  <div class="brand">
-    <div class="brand-logo">K</div>
-    <div class="brand-text">
-      <h1>KOPI</h1>
-      <span>متابعة مصاريف ومساهمات الشركاء</span>
+<!-- Top Navigation / Header -->
+<header class="app-header">
+  <div class="header-container">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+      </div>
+      <div class="brand-text">
+        <h1>KOPI <span>MONEY</span></h1>
+        <p>نظام الحسابات والتسويات الذكي</p>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <div class="status-pill" id="statusPill">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">جاري الاتصال...</span>
+      </div>
+      <button class="icon-btn" id="refreshBtn" title="تحديث البيانات">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M2.5 22v-6h6"></path><path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M22 12.5a10 10 0 0 1-18.8 4.2L2.5 16"></path></svg>
+      </button>
     </div>
   </div>
-  <div class="status-pill">
-    <span class="status-dot" id="statusDot"></span>
-    <span id="statusText">جاري الاتصال...</span>
-  </div>
-</div>
+</header>
 
-<nav class="tabs">
-  <button class="tab-btn active" data-page="dashboard"> الملخص العام</button>
-  <button class="tab-btn" data-page="contributions"> المساهمات</button>
-  <button class="tab-btn" data-page="expenses"> المصروفات</button>
-  <button class="tab-btn" data-page="custody"> عهدة الشركاء</button>
+<!-- Desktop Header Navigation Tabs -->
+<nav class="desktop-nav">
+  <div class="nav-container">
+    <button class="nav-btn active" data-page="dashboard">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect></svg>
+      <span>الملخص الذكي</span>
+    </button>
+    <button class="nav-btn" data-page="contributions">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+      <span>المساهمات</span>
+    </button>
+    <button class="nav-btn" data-page="expenses">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+      <span>المصروفات</span>
+    </button>
+    <button class="nav-btn" data-page="custody">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <span>العهدة والشركاء</span>
+    </button>
+  </div>
 </nav>
 
-<div class="container">
+<!-- Main App Content -->
+<main class="main-content">
+  <div class="app-container">
 
-  <div id="setupBanner" class="setup-banner hidden">
-    ⚠️ <b>الموقع لسه مش متوصل بالشيت.</b><br>
-    افتح ملف <code>config.js</code> وحط رابط الـ Google Apps Script بتاعك في <code>APPS_SCRIPT_URL</code>.
-    راجع ملف README.md لخطوات الإعداد بالتفصيل.
-  </div>
-
-  <div id="loadingState" class="spinner"></div>
-
-  <!-- ===== Dashboard ===== -->
-  <div class="page" id="page-dashboard">
-    <div class="cards-grid" id="statCards"></div>
-    <div class="section-title">حصص وأرصدة الشركاء</div>
-    <div class="panel">
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>اسم الشريك</th>
-              <th>إجمالي ما دفعه</th>
-              <th>نسبة شراكته</th>
-              <th>حصته من المصروفات</th>
-              <th>الفرق (له / عليه)</th>
-            </tr>
-          </thead>
-          <tbody id="partnersTableBody"></tbody>
-        </table>
+    <!-- Setup Banner if not configured -->
+    <div id="setupBanner" class="setup-card hidden">
+      <div class="setup-icon">⚠️</div>
+      <div class="setup-info">
+        <h3>الموقع بحاجة إلى الربط بجوجل شيت</h3>
+        <p>قم بفتح ملف <code>config.js</code> وضع رابط الـ Apps Script في المتغير <code>APPS_SCRIPT_URL</code>.</p>
       </div>
     </div>
-  </div>
 
-  <!-- ===== Contributions ===== -->
-  <div class="page" id="page-contributions">
-    <div class="panel">
-      <div class="panel-header">
-        <h2>💰 سجل مساهمات الشركاء</h2>
-        <button class="btn btn-primary" id="addContributionBtn">+ إضافة مساهمة</button>
-      </div>
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>م</th><th>التاريخ</th><th>اسم الشريك</th><th>المبلغ</th><th>طريقة الدفع</th><th>ملاحظات</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="contributionsTableBody"></tbody>
-        </table>
-      </div>
-      <div id="contributionsEmpty" class="empty-state hidden">لسه مفيش مساهمات مسجلة</div>
+    <!-- Global Loading Spinner -->
+    <div id="loadingState" class="loading-wrapper">
+      <div class="pulse-loader"><div></div><div></div><div></div></div>
+      <span>جاري معالجة الحسابات...</span>
     </div>
+
+    <!-- PAGE 1: DASHBOARD & SMART ANALYTICS -->
+    <section class="page-view active" id="page-dashboard">
+      
+      <!-- Top Metrics Cards -->
+      <div class="metrics-grid" id="statCards"></div>
+
+      <!-- Quick Action Buttons Bar -->
+      <div class="quick-actions-bar">
+        <button class="quick-action-btn primary" id="quickAddContrib">
+          <span class="icon">+</span> <span>إضافة مساهمة</span>
+        </button>
+        <button class="quick-action-btn danger" id="quickAddExpense">
+          <span class="icon">+</span> <span>تسجيل مصروف</span>
+        </button>
+        <button class="quick-action-btn warning" id="quickAddCustody">
+          <span class="icon">+</span> <span>تسليم عهدة</span>
+        </button>
+      </div>
+
+      <!-- Smart Financial Insights Grid -->
+      <div class="dashboard-grid">
+        
+        <!-- Partner Share Table -->
+        <div class="glass-card full-width">
+          <div class="card-header">
+            <div class="header-title">
+              <span class="header-icon blue">📊</span>
+              <div>
+                <h2>موقف وأرصدة الشركاء</h2>
+                <p>متابعة ميزان المدفوعات والحصص</p>
+              </div>
+            </div>
+          </div>
+          <div class="responsive-table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>اسم الشريك</th>
+                  <th>ما تم دفعه</th>
+                  <th>نسبة الشراكة</th>
+                  <th>الحصة من المصروفات</th>
+                  <th>صافي المركز المالي</th>
+                </tr>
+              </thead>
+              <tbody id="partnersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Smart Settlement Assistant -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="header-title">
+              <span class="header-icon green">💡</span>
+              <div>
+                <h2>أداة تسوية الشركاء الفورية</h2>
+                <p>كيف تتم التسوية بين الشركاء بأقل عدد تحويلات</p>
+              </div>
+            </div>
+          </div>
+          <div id="settlementBox" class="settlement-container"></div>
+        </div>
+
+        <!-- Expenses Breakdown Analytics -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="header-title">
+              <span class="header-icon purple">🏷️</span>
+              <div>
+                <h2>تحليل بوب ومصادر الصرف</h2>
+                <p>توزيع المصروفات حسب الفئات والجداول</p>
+              </div>
+            </div>
+          </div>
+          <div id="expenseCategoryList" class="category-analytics"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PAGE 2: CONTRIBUTIONS -->
+    <section class="page-view" id="page-contributions">
+      <div class="glass-card">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="header-icon green">💰</span>
+            <div>
+              <h2>سجل مساهمات ورؤوس أموال الشركاء</h2>
+              <p>كل المبالغ التي ضخها الشركاء في المشروع</p>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="openAdd('contributions')">
+            <span>+ إضافة مساهمة</span>
+          </button>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="table-toolbar">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchContributions" placeholder="بحث باسم الشريك أو البيان..." oninput="filterTable('contributions')">
+          </div>
+          <div class="filter-pills" id="filterContribPartner"></div>
+        </div>
+
+        <div class="responsive-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>التاريخ</th>
+                <th>اسم الشريك</th>
+                <th>المبلغ</th>
+                <th>طريقة الدفع</th>
+                <th>ملاحظات</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="contributionsTableBody"></tbody>
+          </table>
+        </div>
+        <div id="contributionsCardsMobile" class="mobile-cards-list"></div>
+        <div id="contributionsEmpty" class="empty-state hidden">لا يوجد مساهمات مطابقة للبحث</div>
+      </div>
+    </section>
+
+    <!-- PAGE 3: EXPENSES -->
+    <section class="page-view" id="page-expenses">
+      <div class="glass-card">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="header-icon red">🧾</span>
+            <div>
+              <h2>سجل مصروفات ومشتريات الكافيه</h2>
+              <p>تسجيل الفواتير، التجهيزات، والمصاريف التشغيلية</p>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="openAdd('expenses')">
+            <span>+ إضافة مصروف</span>
+          </button>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="table-toolbar">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchExpenses" placeholder="بحث بالبند أو الملاحظات..." oninput="filterTable('expenses')">
+          </div>
+          <div class="filter-pills" id="filterExpenseCategory"></div>
+        </div>
+
+        <div class="responsive-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>التاريخ</th>
+                <th>البند / بيان المصروف</th>
+                <th>المبلغ</th>
+                <th>مصدر الصرف</th>
+                <th>ملاحظات</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="expensesTableBody"></tbody>
+          </table>
+        </div>
+        <div id="expensesCardsMobile" class="mobile-cards-list"></div>
+        <div id="expensesEmpty" class="empty-state hidden">لا يوجد مصروفات مسجلة</div>
+      </div>
+    </section>
+
+    <!-- PAGE 4: CUSTODY & PARTNERS -->
+    <section class="page-view" id="page-custody">
+      <div class="glass-card">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="header-icon amber">🤝</span>
+            <div>
+              <h2>متابعة العهد المترتبة لدى الشركاء</h2>
+              <p>الفولس المسلمة لشركاء كعهدة لشراء مستلزمات</p>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="openAdd('custody')">
+            <span>+ تسليم عهدة جديدة</span>
+          </button>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="table-toolbar">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchCustody" placeholder="بحث بالشريك أو السبب..." oninput="filterTable('custody')">
+          </div>
+        </div>
+
+        <div class="responsive-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>التاريخ</th>
+                <th>الشريك الماسك</th>
+                <th>المبلغ</th>
+                <th>السبب / الهدف</th>
+                <th>الحالة</th>
+                <th>ملاحظات</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="custodyTableBody"></tbody>
+          </table>
+        </div>
+        <div id="custodyCardsMobile" class="mobile-cards-list"></div>
+        <div id="custodyEmpty" class="empty-state hidden">لا يوجد عهد مسجلة</div>
+      </div>
+    </section>
+
   </div>
+</main>
 
-  <!-- ===== Expenses ===== -->
-  <div class="page" id="page-expenses">
-    <div class="panel">
-      <div class="panel-header">
-        <h2>🧾 سجل مصروفات المشروع</h2>
-        <button class="btn btn-primary" id="addExpenseBtn">+ إضافة مصروف</button>
-      </div>
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>م</th><th>التاريخ</th><th>البند</th><th>المبلغ</th><th>اتصرف من فلوس</th><th>ملاحظات</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="expensesTableBody"></tbody>
-        </table>
-      </div>
-      <div id="expensesEmpty" class="empty-state hidden">لسه مفيش مصروفات مسجلة</div>
-    </div>
-  </div>
+<!-- Bottom Navigation Bar for Mobile -->
+<nav class="mobile-nav">
+  <button class="mobile-nav-btn active" data-page="dashboard">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect></svg>
+    <span>الملخص</span>
+  </button>
+  <button class="mobile-nav-btn" data-page="contributions">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    <span>المساهمات</span>
+  </button>
+  <button class="mobile-nav-btn" data-page="expenses">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+    <span>المصروفات</span>
+  </button>
+  <button class="mobile-nav-btn" data-page="custody">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    <span>العهدة</span>
+  </button>
+</nav>
 
-  <!-- ===== Custody ===== -->
-  <div class="page" id="page-custody">
-    <div class="panel">
-      <div class="panel-header">
-        <h2>🤝 متابعة الفلوس المتشالة مع الشركاء</h2>
-        <button class="btn btn-primary" id="addCustodyBtn">+ إضافة عهدة</button>
-      </div>
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>م</th><th>التاريخ</th><th>الشريك الماسك</th><th>المبلغ</th><th>السبب</th><th>الحالة</th><th>ملاحظات</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="custodyTableBody"></tbody>
-        </table>
-      </div>
-      <div id="custodyEmpty" class="empty-state hidden">لسه مفيش عهد مسجلة</div>
-    </div>
-  </div>
-
-</div>
-
-<footer>KOPI © <span id="year"></span> — متصل مباشرة بشيت Google Sheets</footer>
-
-<!-- ===== Modal (shared, filled dynamically) ===== -->
+<!-- Modal Container (Dynamically rendered with smart presets) -->
 <div class="modal-overlay hidden" id="modalOverlay">
-  <div class="modal">
+  <div class="modal-card">
     <div class="modal-header">
-      <h3 id="modalTitle">إضافة</h3>
+      <div class="modal-title-group">
+        <span class="modal-badge" id="modalBadge">إضافة</span>
+        <h3 id="modalTitle">إضافة جديد</h3>
+      </div>
       <button class="modal-close" id="modalCloseBtn">✕</button>
     </div>
+    
     <div class="modal-body" id="modalBody"></div>
+
     <div class="modal-footer">
       <button class="btn btn-ghost" id="modalCancelBtn">إلغاء</button>
-      <button class="btn btn-primary" id="modalSaveBtn">حفظ</button>
+      <button class="btn btn-primary btn-save" id="modalSaveBtn">
+        <span>حفظ البيانات</span>
+      </button>
     </div>
   </div>
 </div>
+
+<footer class="app-footer">
+  KOPI MONEY System © <span id="year"></span> — الإدارة المالية المتطورة
+</footer>
 
 <script src="config.js"></script>
 <script src="app.js"></script>

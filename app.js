@@ -218,11 +218,11 @@ function renderDashboard() {
     cardsEl.innerHTML = `
       <div class="metric-card emerald">
         <div class="metric-header">
-          <span class="metric-title">إجمالي المساهمات المدفوعة</span>
+          <span class="metric-title">إجمالي رأس المال المدفوع</span>
           <span class="metric-icon">💰</span>
         </div>
         <div class="metric-value">${fmtMoney(t.totalContributions)}</div>
-        <div class="metric-subtitle">رأس المال المجمع من الشركاء</div>
+        <div class="metric-subtitle">مجموع مساهمات الشركاء</div>
       </div>
 
       <div class="metric-card rose">
@@ -231,32 +231,23 @@ function renderDashboard() {
           <span class="metric-icon">🧾</span>
         </div>
         <div class="metric-value">${fmtMoney(t.totalExpenses)}</div>
-        <div class="metric-subtitle">مشاريع وتجهيزات وتشغيل</div>
-      </div>
-
-      <div class="metric-card amber">
-        <div class="metric-header">
-          <span class="metric-title">عهد وخزنة المشروع مع الشركاء</span>
-          <span class="metric-icon">🤝</span>
-        </div>
-        <div class="metric-value">${fmtMoney(custodyHeld)}</div>
-        <div class="metric-subtitle">خزنة وسيولة متوفرة مع الشركاء</div>
+        <div class="metric-subtitle">المصروفات والتجهيزات الكلية</div>
       </div>
 
       <div class="metric-card">
         <div class="metric-header">
-          <span class="metric-title">الرصيد الصافي المتاح بالخزينة</span>
+          <span class="metric-title">الرصيد الصافي المتاح بالخزينة (العهدة)</span>
           <span class="metric-icon">🏦</span>
         </div>
-        <div class="metric-value" style="color: ${t.availableBalance < 0 ? 'var(--brand-rose)' : 'var(--brand-blue)'}">
-          ${fmtMoney(t.availableBalance)}
+        <div class="metric-value" style="color: var(--brand-blue)">
+          ${fmtMoney(custodyHeld)}
         </div>
-        <div class="metric-subtitle">${t.availableBalance < 0 ? 'عجز في الخزينة' : 'فائض جاهز للاستخدام'}</div>
+        <div class="metric-subtitle">السيولة المتاحة للاستخدام مع الشركاء</div>
       </div>
     `;
   }
 
-  // Partners Summary Table
+  // Partners Summary Table (3 Columns: Name, Total Paid, Share %)
   const body = document.getElementById('partnersTableBody');
   const mobileList = document.getElementById('partnersCardsMobile');
   const partners = computed.partnersSummary;
@@ -270,21 +261,18 @@ function renderDashboard() {
         <td style="font-weight:800;">${p.name}</td>
         <td class="amount-display">${fmtMoney(p.totalPaid)}</td>
         <td><span class="badge-pill blue">${pctFormatted}</span></td>
-        <td>${fmtMoney(p.shareOfExpenses)}</td>
       </tr>
     `;
   }).join('');
 
   // Total Summary Row
   const totalPaidSum = t.sumPartnersPaid;
-  const totalExpSum = t.totalExpenses;
 
   rowsHtml += `
     <tr style="font-weight:900; background:#f1f5f9;">
       <td>الإجمالي</td>
       <td class="amount-display">${fmtMoney(totalPaidSum)}</td>
       <td><span class="badge-pill blue">100%</span></td>
-      <td>${fmtMoney(totalExpSum)}</td>
     </tr>`;
 
   if (body) body.innerHTML = rowsHtml;
@@ -302,8 +290,7 @@ function renderDashboard() {
             <span class="badge-pill blue">نسبة الشراكة: ${pctFormatted}</span>
           </div>
           <div class="mobile-card-row mobile-card-meta">
-            <span>ما تم دفعه: <b>${fmtMoney(p.totalPaid)}</b></span>
-            <span>الحصة من المصروفات: <b>${fmtMoney(p.shareOfExpenses)}</b></span>
+            <span>إجمالي ما دفعه: <b style="color:var(--brand-emerald);">${fmtMoney(p.totalPaid)}</b></span>
           </div>
         </div>
       `;

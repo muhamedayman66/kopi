@@ -192,10 +192,10 @@ function calculatePartnersSummary() {
   return {
     partnersSummary,
     totals: {
-      totalContributions: totalContribs,
+      totalContributions: sumPartnersPaid,
       totalExpenses,
       sumPartnersPaid,
-      availableBalance: totalContribs - totalExpenses
+      availableBalance: sumPartnersPaid - totalExpenses
     }
   };
 }
@@ -221,8 +221,8 @@ function renderDashboard() {
           <span class="metric-title">إجمالي رأس المال المدفوع</span>
           <span class="metric-icon">💰</span>
         </div>
-        <div class="metric-value">${fmtMoney(t.totalContributions)}</div>
-        <div class="metric-subtitle">مجموع مساهمات الشركاء</div>
+        <div class="metric-value">${fmtMoney(t.sumPartnersPaid)}</div>
+        <div class="metric-subtitle">مجموع مساهمات الشركاء الفليّة</div>
       </div>
 
       <div class="metric-card rose">

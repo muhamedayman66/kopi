@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>KOPI | الإدارة المالية الذكية للكافيه والشركاء</title>
+<title>KOPI SPECIALTY COFFEE | نظام الحسابات والتسويات الذكي</title>
+<link rel="icon" type="image/png" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -14,12 +15,15 @@
 <header class="app-header">
   <div class="header-container">
     <div class="brand">
-      <div class="brand-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+      <div class="brand-logo-badge">
+        <img src="logo.png" alt="KOPI SPECIALTY COFFEE" class="brand-logo-img">
       </div>
       <div class="brand-text">
-        <h1>KOPI <span>MONEY</span></h1>
-        <p>نظام الحسابات والتسويات الذكي</p>
+        <div class="brand-title-row">
+          <h1>KOPI <span>MONEY</span></h1>
+          <span class="brand-tag">SPECIALTY COFFEE</span>
+        </div>
+        <p>نظام الحسابات والتسويات الذكي للشركاء</p>
       </div>
     </div>
     
@@ -63,7 +67,9 @@
 
     <!-- Setup Banner if not configured -->
     <div id="setupBanner" class="setup-card hidden">
-      <div class="setup-icon">⚠️</div>
+      <div class="setup-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
       <div class="setup-info">
         <h3>الموقع بحاجة إلى الربط بجوجل شيت</h3>
         <p>قم بفتح ملف <code>config.js</code> وضع رابط الـ Apps Script في المتغير <code>APPS_SCRIPT_URL</code>.</p>
@@ -99,10 +105,12 @@
       <div class="glass-card full-width">
         <div class="card-header">
           <div class="header-title">
-            <span class="header-icon blue">📊</span>
+            <span class="header-icon blue">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </span>
             <div>
-              <h2>موقف وأرصدة الشركاء</h2>
-              <p>متابعة ميزان المدفوعات والحصص النسبية للمشروع</p>
+              <h2>موقف وأرصدة الشركاء والتسويات</h2>
+              <p>متابعة ميزان المدفوعات والحصص ونسبة المصروفات والمستحقات العادلة</p>
             </div>
           </div>
         </div>
@@ -113,12 +121,30 @@
                 <th>اسم الشريك</th>
                 <th>ما تم دفعه</th>
                 <th>نسبة الشراكة</th>
+                <th>نصيبه من المصروفات</th>
+                <th>الموقف المالي والتسوية</th>
               </tr>
             </thead>
             <tbody id="partnersTableBody"></tbody>
           </table>
         </div>
         <div id="partnersCardsMobile" class="mobile-cards-list"></div>
+      </div>
+
+      <!-- Recent Financial Activity Feed -->
+      <div class="glass-card full-width" style="margin-top: 24px;">
+        <div class="card-header">
+          <div class="header-title">
+            <span class="header-icon purple">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </span>
+            <div>
+              <h2>آخر الحركات والعمليات المالية</h2>
+              <p>سجل فوري لآخر المصروفات والمساهمات المسجلة</p>
+            </div>
+          </div>
+        </div>
+        <div id="recentActivityList" class="activity-feed"></div>
       </div>
 
     </section>
@@ -128,7 +154,9 @@
       <div class="glass-card">
         <div class="card-header">
           <div class="header-title">
-            <span class="header-icon green">💰</span>
+            <span class="header-icon green">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+            </span>
             <div>
               <h2>سجل مساهمات ورؤوس أموال الشركاء</h2>
               <p>كل المبالغ التي ضخها الشركاء في المشروع</p>
@@ -174,7 +202,9 @@
       <div class="glass-card">
         <div class="card-header">
           <div class="header-title">
-            <span class="header-icon red">🧾</span>
+            <span class="header-icon red">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-8"/><path d="M16 12h-8"/><path d="M10 16h-2"/></svg>
+            </span>
             <div>
               <h2>سجل مصروفات ومشتريات الكافيه</h2>
               <p>تسجيل الفواتير، التجهيزات، والمصاريف التشغيلية</p>
@@ -220,7 +250,9 @@
       <div class="glass-card">
         <div class="card-header">
           <div class="header-title">
-            <span class="header-icon amber">🤝</span>
+            <span class="header-icon amber">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
             <div>
               <h2>متابعة العهد المترتبة لدى الشركاء</h2>
               <p>الفلوس المسلمة لشركاء كعهدة لشراء مستلزمات</p>
@@ -230,6 +262,9 @@
             <span>+ تسليم عهدة جديدة</span>
           </button>
         </div>
+
+        <!-- Custody Summary Metrics -->
+        <div class="custody-stats-grid" id="custodyStatsGrid"></div>
 
         <!-- Filter & Search Toolbar -->
         <div class="table-toolbar">
@@ -292,7 +327,9 @@
         <span class="modal-badge" id="modalBadge">إضافة</span>
         <h3 id="modalTitle">إضافة جديد</h3>
       </div>
-      <button class="modal-close" id="modalCloseBtn">✕</button>
+      <button class="modal-close" id="modalCloseBtn" aria-label="إغلاق">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
     
     <div class="modal-body" id="modalBody"></div>

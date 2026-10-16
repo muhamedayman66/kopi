@@ -280,8 +280,8 @@ function renderDashboard() {
     `;
   }
 
-  // Partners Summary Table with 5 Columns:
-  // اسم الشريك | ما تم دفعه | نسبة الشراكة | نصيبه من المصروفات | الموقف والتسوية (له / عليه)
+  // Partners Summary Table with 3 Columns:
+  // اسم الشريك | ما تم دفعه | نسبة الشراكة
   const body = document.getElementById('partnersTableBody');
   const mobileList = document.getElementById('partnersCardsMobile');
 
@@ -289,22 +289,11 @@ function renderDashboard() {
     const pctVal = (p.sharePercent || 0) * 100;
     const pctFormatted = Number.isInteger(pctVal) ? pctVal + '%' : pctVal.toFixed(1) + '%';
 
-    let settlementBadge = '';
-    if (p.balance > 1) {
-      settlementBadge = `<span class="settlement-badge pos">له باقي: +${fmtMoney(p.balance)}</span>`;
-    } else if (p.balance < -1) {
-      settlementBadge = `<span class="settlement-badge neg">عليه فرق: ${fmtMoney(p.balance)}</span>`;
-    } else {
-      settlementBadge = `<span class="settlement-badge zero">متطابق تماماً</span>`;
-    }
-
     return `
       <tr>
         <td style="font-weight:800;">${p.name}</td>
         <td class="amount-display">${fmtMoney(p.totalPaid)}</td>
         <td><span class="badge-pill blue">${pctFormatted}</span></td>
-        <td class="amount-display" style="color: var(--text-secondary);">${fmtMoney(p.shareOfExpenses)}</td>
-        <td>${settlementBadge}</td>
       </tr>
     `;
   }).join('');
@@ -315,8 +304,6 @@ function renderDashboard() {
       <td>الإجمالي</td>
       <td class="amount-display">${fmtMoney(t.sumPartnersPaid)}</td>
       <td><span class="badge-pill blue">100%</span></td>
-      <td class="amount-display">${fmtMoney(t.totalExpenses)}</td>
-      <td><span class="badge-pill green">صافي الفائض: ${fmtMoney(t.availableBalance)}</span></td>
     </tr>`;
 
   if (body) body.innerHTML = rowsHtml;
@@ -327,15 +314,6 @@ function renderDashboard() {
       const pctVal = (p.sharePercent || 0) * 100;
       const pctFormatted = Number.isInteger(pctVal) ? pctVal + '%' : pctVal.toFixed(1) + '%';
 
-      let settlementBadge = '';
-      if (p.balance > 1) {
-        settlementBadge = `<span class="settlement-badge pos">له باقي: +${fmtMoney(p.balance)}</span>`;
-      } else if (p.balance < -1) {
-        settlementBadge = `<span class="settlement-badge neg">عليه فرق: ${fmtMoney(p.balance)}</span>`;
-      } else {
-        settlementBadge = `<span class="settlement-badge zero">متطابق تماماً</span>`;
-      }
-
       return `
         <div class="mobile-data-card">
           <div class="mobile-card-row">
@@ -343,12 +321,7 @@ function renderDashboard() {
             <span class="badge-pill blue">${pctFormatted}</span>
           </div>
           <div class="mobile-card-row mobile-card-meta">
-            <span>إجمالي المدفوع: <b style="color:var(--brand-emerald);">${fmtMoney(p.totalPaid)}</b></span>
-            <span>نصيب المصروف: <b>${fmtMoney(p.shareOfExpenses)}</b></span>
-          </div>
-          <div class="mobile-card-row" style="margin-top:4px;">
-            <span>الموقف المالي:</span>
-            ${settlementBadge}
+            <span>إجمالي ما دفعه: <b style="color:var(--brand-emerald);">${fmtMoney(p.totalPaid)}</b></span>
           </div>
         </div>
       `;

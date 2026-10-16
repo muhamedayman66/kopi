@@ -1268,13 +1268,72 @@ button, input, select, textarea {
 @media (max-width: 768px) {
   .desktop-nav { display: none; }
   .mobile-nav { display: flex; }
-  .main-content { padding: 14px 14px 90px; }
+  .main-content { padding: 12px 12px 90px; }
   .dashboard-grid { grid-template-columns: 1fr; }
   .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .metric-card { padding: 14px; }
   .metric-value { font-size: 20px; }
   .quick-action-btn { min-width: 100%; }
   .custody-stats-grid { grid-template-columns: 1fr; gap: 8px; padding: 12px; }
+
+  /* Mobile Responsive Header */
+  .header-container {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .brand {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .brand-logo-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    padding: 2px;
+  }
+
+  .brand-text {
+    min-width: 0;
+  }
+
+  .brand-text h1 {
+    font-size: 16px;
+    white-space: nowrap;
+    line-height: 1.1;
+  }
+
+  .brand-tag {
+    font-size: 8.5px;
+    padding: 1px 5px;
+    letter-spacing: 0.3px;
+  }
+
+  .brand-text p {
+    display: none; /* Hide long subtitle on mobile to keep header clean and prevent overlap */
+  }
+
+  .header-actions {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .status-pill {
+    padding: 4px 10px;
+    font-size: 11.5px;
+    gap: 6px;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .icon-btn svg {
+    width: 15px;
+    height: 15px;
+  }
 
   /* Mobile Responsive Tables */
   .responsive-table-wrapper { display: none; }
@@ -1288,5 +1347,37 @@ button, input, select, textarea {
   .modal-overlay {
     align-items: flex-end;
     padding: 0;
+  }
+}
+
+/* Extra Small Screens (<= 400px e.g. iPhone SE / compact devices) */
+@media (max-width: 400px) {
+  .header-container {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .brand-logo-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+  }
+
+  .brand-text h1 {
+    font-size: 14.5px;
+  }
+
+  .brand-tag {
+    display: none; /* Hide badge on very narrow screens for clean look */
+  }
+
+  .status-pill {
+    padding: 4px 8px;
+    font-size: 10.5px;
+    gap: 5px;
+  }
+
+  #statusText {
+    font-size: 10.5px;
   }
 }
